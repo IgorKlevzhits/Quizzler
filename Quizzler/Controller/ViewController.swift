@@ -50,25 +50,19 @@ class ViewController: UIViewController {
     private var ansewerTwo = UIButton(name: "Skin")
     private var ansewerThree = UIButton(name: "Learge Intestine")
     
-    private lazy var timerView: UIView = {
-        let element = UIView()
-        
-        element.translatesAutoresizingMaskIntoConstraints = false
-        return element
-    }()
-    
     private lazy var progressView: UIProgressView = {
         let element = UIProgressView()
         element.progressTintColor = .systemPink
         element.trackTintColor = .white
-        element.progress = 0.5
+        element.progress = 0
         element.translatesAutoresizingMaskIntoConstraints = false
         return element
     }()
     
     // MARK: - Private Properties
     
-    private let spasing: CGFloat = 10
+    private let spasing: CGFloat = 20
+    var quizBrain = QuizBrain()
     
     // MARK: - Life Cycle
 
@@ -77,6 +71,35 @@ class ViewController: UIViewController {
         
         setViews()
         setupConstraints()
+        updateUI()
+    }
+    
+    // MARK: - Methods
+    
+    @objc private func answerButtonPressed(_ sender: UIButton) {
+        
+        if quizBrain.chekAnswer(sender.currentTitle!) {
+            sender.backgroundColor = .green
+        } else {
+            sender.backgroundColor = .red
+        }
+        
+        quizBrain.nextQuestion()
+        
+        Timer.scheduledTimer(timeInterval: 0.2, target: self, selector: #selector(updateUI), userInfo: nil, repeats: false)
+    }
+    
+    @objc private func updateUI() {
+        scoreLabel.text = "Score: \(quizBrain.getScore())"
+        questionLabel.text = quizBrain.getQuestionText()
+        ansewerOne.setTitle(quizBrain.getAnswerText(0), for: .normal)
+        ansewerTwo.setTitle(quizBrain.getAnswerText(1), for: .normal)
+        ansewerThree.setTitle(quizBrain.getAnswerText(2), for: .normal)
+        progressView.progress = quizBrain.getProgress()
+        
+        ansewerOne.backgroundColor = .clear
+        ansewerTwo.backgroundColor = .clear
+        ansewerThree.backgroundColor = .clear
     }
 
 }
@@ -99,8 +122,11 @@ extension ViewController {
         buttonsStackView.addArrangedSubview(ansewerTwo)
         buttonsStackView.addArrangedSubview(ansewerThree)
         
-        view.addSubview(timerView)
-        timerView.addSubview(progressView)
+        view.addSubview(progressView)
+        
+        ansewerOne.addTarget(self, action: #selector(answerButtonPressed), for: .touchUpInside)
+        ansewerTwo.addTarget(self, action: #selector(answerButtonPressed), for: .touchUpInside)
+        ansewerThree.addTarget(self, action: #selector(answerButtonPressed), for: .touchUpInside)
     }
     
     // MARK: - Setup Constraints
@@ -124,18 +150,14 @@ extension ViewController {
             
             buttonsStackView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: spasing),
             buttonsStackView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -spasing),
-            buttonsStackView.bottomAnchor.constraint(equalTo: timerView.topAnchor),
+            buttonsStackView.bottomAnchor.constraint(equalTo: progressView.topAnchor, constant: -spasing),
             
             ansewerOne.heightAnchor.constraint(equalTo: view.safeAreaLayoutGuide.heightAnchor, multiplier: 0.1),
             
-            timerView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: spasing),
-            timerView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -spasing),
-            timerView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
-            timerView.heightAnchor.constraint(equalTo: view.safeAreaLayoutGuide.heightAnchor, multiplier: 0.05),
-            
-            progressView.centerYAnchor.constraint(equalTo: timerView.centerYAnchor),
-            progressView.leadingAnchor.constraint(equalTo: timerView.leadingAnchor),
-            progressView.trailingAnchor.constraint(equalTo: timerView.trailingAnchor)
+            progressView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: spasing),
+            progressView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -spasing),
+            progressView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -spasing),
+            progressView.heightAnchor.constraint(equalTo: view.safeAreaLayoutGuide.heightAnchor, multiplier: 0.01)
         ])
     }
 }
@@ -149,6 +171,7 @@ extension UIButton {
         self.setBackgroundImage(UIImage(named: "Rectangle"), for: .normal)
         self.titleLabel?.font = .systemFont(ofSize: 25, weight: .medium)
         self.tintColor = .white
+        self.layer.cornerRadius = 20
         self.translatesAutoresizingMaskIntoConstraints = false
     }
 }
